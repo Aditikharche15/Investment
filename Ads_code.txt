@@ -1,0 +1,229 @@
+import java.sql.*;
+import java.util.Scanner;
+
+public class Ads_cp {
+
+    public static void quickSortDescending(double[] arr, int low, int high) {
+        if (low < high) {
+            int pi = partitionDescending(arr, low, high);
+            quickSortDescending(arr, low, pi - 1);
+            quickSortDescending(arr, pi + 1, high);
+        }
+    }
+
+    public static int partitionDescending(double[] arr, int low, int high) {
+        double pivot = arr[high];
+        int i = low - 1;
+
+        for (int j = low; j < high; j++) {
+            if (arr[j] > pivot) {
+                i++;
+                double temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+        double temp = arr[i + 1];
+        arr[i + 1] = arr[high];
+        arr[high] = temp;
+
+        return i + 1;
+    }
+
+    public static void main(String[] args) {
+
+        double[] performanceValues = new double[50];
+        int index = 0;
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Welcome to the Financial Data Analysis Tool!");
+        System.out.println("Select a sector:");
+        System.out.println("1. Life science");
+        System.out.println("2. Other");
+        System.out.println("3. Technology");
+        System.out.println("4. Financial services");
+        System.out.println("5. Construction");
+        System.out.println("6. Intellectual property");
+        System.out.println("7. Natural resources");
+        System.out.println("8. Real estate");
+        System.out.println("9. Environmental");
+        System.out.println("10. Energy");
+        System.out.println("11. Any sector");
+
+        int selectedOption;
+        String selectedSector = "";
+        boolean validSector = false;
+
+        while (!validSector) {
+            System.out.print("Enter your choice: ");
+            selectedOption = scanner.nextInt();
+
+            switch (selectedOption) {
+                case 1:
+                    selectedSector = "Life science";
+                    validSector = true;
+                    break;
+                case 2:
+                    selectedSector = "Other";
+                    validSector = true;
+                    break;
+                case 3:
+                    selectedSector = "Technology";
+                    validSector = true;
+                    break;
+                case 4:
+                    selectedSector = "Financial services";
+                    validSector = true;
+                    break;
+                case 5:
+                    selectedSector = "Construction";
+                    validSector = true;
+                    break;
+                case 6:
+                    selectedSector = "Intellectual property";
+                    validSector = true;
+                    break;
+                case 7:
+                    selectedSector = "Natural resources";
+                    validSector = true;
+                    break;
+                case 8:
+                    selectedSector = "Real estate";
+                    validSector = true;
+                    break;
+                case 9:
+                    selectedSector = "Environmental";
+                    validSector = true;
+                    break;
+                case 10:
+                    selectedSector = "Energy";
+                    validSector = true;
+                    break;
+                case 11:
+                    selectedSector = "Any sector";
+                    validSector = true;
+                    break;
+                default:
+                    System.out.println("Invalid selection! Please try again.");
+            }
+        }
+
+        int riskAppetite;
+        String selectedRisk = "";
+        boolean validRisk = false;
+
+        while (!validRisk) {
+            System.out.println("\nSelect your risk appetite:");
+            System.out.println("1. Conservative");
+            System.out.println("2. Moderate");
+            System.out.println("3. Aggressive");
+            System.out.print("Enter your risk appetite: ");
+
+            riskAppetite = scanner.nextInt();
+
+            switch (riskAppetite) {
+                case 1:
+                    selectedRisk = "Below 20";
+                    validRisk = true;
+                    break;
+                case 2:
+                    selectedRisk = "20 to 40";
+                    validRisk = true;
+                    break;
+                case 3:
+                    selectedRisk = "Above 40";
+                    validRisk = true;
+                    break;
+                default:
+                    System.out.println("Invalid risk appetite selection! Please try again.");
+            }
+        }
+
+        System.out.print("\nEnter the amount you want to invest: $");
+        double userIncome = scanner.nextDouble();
+
+        try {
+            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/stock", "root", "91729072");
+            System.out.println("\nConnected to the database.");
+
+            String query;
+            if (selectedSector.equals("Any sector")) {
+                query = "SELECT * FROM avg_return WHERE ";
+                switch (selectedRisk) {
+                    case "Below 20":
+                        query += "Standard_deviation < 20";
+                        break;
+                    case "20 to 40":
+                        query += "Standard_deviation >= 20 AND Standard_deviation <= 40";
+                        break;
+                    case "Above 40":
+                        query += "Standard_deviation > 40";
+                        break;
+                    default:
+                        System.out.println("Invalid risk appetite selection! Please try again.");
+                }
+            } else {
+                query = "SELECT * FROM avg_return WHERE sector = ? AND ";
+                switch (selectedRisk) {
+                    case "Below 20":
+                        query += "Standard_deviation < 20";
+                        break;
+                    case "20 to 40":
+                        query += "Standard_deviation >= 20 AND Standard_deviation <= 40";
+                        break;
+                    case "Above 40":
+                        query += "Standard_deviation > 40";
+                        break;
+                    default:
+                        System.out.println("Invalid risk appetite selection! Please try again.");
+                }
+            }
+
+            PreparedStatement preparedStatement = con.prepareStatement(query);
+            if (!selectedSector.equals("Any sector")) {
+                preparedStatement.setString(1, selectedSector);
+            }
+
+            ResultSet rs = preparedStatement.executeQuery();
+
+            String userdata;
+
+            while (rs.next()) {
+                double performance = rs.getDouble("performance");
+                performanceValues[index] = performance;
+                index++;
+            }
+
+            System.out.println("\nPerformance Values:");
+
+            for (int i = 0; i < index; i++) {
+                System.out.println("   " + performanceValues[i]);
+            }
+
+            quickSortDescending(performanceValues, 0, index - 1);
+
+            String query2 = "SELECT * FROM avg_return WHERE performance = ? ";
+            PreparedStatement preparedStatement2 = con.prepareStatement(query2);
+            String userdata2;
+
+            System.out.println("\nSorted Performance Values in Descending Order:");
+            for (int i = 0; i < index; i++) {
+                preparedStatement2.setDouble(1, performanceValues[i]);
+                ResultSet rs2 = preparedStatement2.executeQuery();
+
+                while (rs2.next()) {
+                    String sector = rs2.getString("sector");
+                    String company = rs2.getString("company");
+                    double performance = rs2.getDouble("performance");
+                    userdata2 = "Sector: " + sector + ", Company: " + company + ", Performance: " + performance;
+                    System.out.println("   " + userdata2);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            scanner.close();
+        }
+    }
+}
